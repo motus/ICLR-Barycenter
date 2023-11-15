@@ -27,10 +27,10 @@ def get_author_domain(author_id):
     profiles = response.json().get("profiles", [])
     dom = max(
         ((float(pos.get("end") or "inf"),
-          float(pos.get("start") or "inf"),
+          float(pos.get("start") or "-inf"),
           pos.get("institution", {}).get("domain"))
          for prof in profiles for pos in prof.get("content", {}).get("history", [])),
-        default=(None, None, None))[2]
+        default=(float("inf"), float("-inf"), None))[2]
 
     _LOG.info("Author: %s domain: %s", author_id, dom)
     return dom
