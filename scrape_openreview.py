@@ -41,11 +41,11 @@ def get_authors(venue, max_pages=float("inf")):
         _LOG.info("Get authors for venue: %s page: %d of %s", venue, page, max_pages)
         response = requests.get(f"{_URL_ROOT}{venue}&page={page}", timeout=_HTTP_TIMEOUT)
         soup = BeautifulSoup(response.text, "html.parser")
-        for paper in soup.find_all("div", {"class": "note-authors"}):
+        for (i, paper) in enumerate(soup.find_all("div", {"class": "note-authors"})):
             num_authors = len(paper)
-            _LOG.info("Paper %s has %d authors", paper, num_authors)
-            for (i, author) in enumerate((a['title'] for a in paper.find_all("a")), 1):
-                yield (author, i, num_authors)
+            _LOG.info("Paper %d has %d authors", i, num_authors)
+            for (author_idx, author) in enumerate((a['title'] for a in paper.find_all("a")), 1):
+                yield (author, author_idx, num_authors)
         if max_pages is None:
             max_pages = int(soup.find_all("a", href=_RE_LAST_PAGE)[-1].text)
         page += 1
@@ -73,5 +73,8 @@ def _main():
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s %(filename)s:%(lineno)d %(funcName)s %(levelname)s %(message)s'
+    )
     _main()
