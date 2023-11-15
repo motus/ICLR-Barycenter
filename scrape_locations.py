@@ -26,10 +26,12 @@ def get_author_domain(author_id):
 
     response = requests.get(f"{_URL_API}/profiles?id={author_id}", timeout=_HTTP_TIMEOUT)
     profiles = response.json()["profiles"]
-    dom = max((pos["end"] or float("inf"),
-               pos["start"] or float("inf"),
-               pos["institution"]["domain"])
-              for prof in profiles for pos in prof["content"]["history"])[2]
+    dom = max(
+        ((pos["end"] or float("inf"),
+          pos["start"] or float("inf"),
+          pos["institution"]["domain"])
+         for prof in profiles for pos in prof["content"]["history"]),
+        default=(None, None, None))[2]
 
     _LOG.info("Author: %s domain: %s", author_id, dom)
     return dom
@@ -39,6 +41,8 @@ def get_location(domain):
     """
     Get the country and state of the domain.
     """
+    if domain is None:
+        return (None, None)
     w = whois.whois(domain)
     country = w.country or w.registrant_country
     state = w.state or w.registrant_state
