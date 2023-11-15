@@ -45,8 +45,7 @@ def _main():
     args = parser.parse_args()
     df = pandas.read_csv(args.input)
     domains = {
-        author: get_author_domain(author)
-        for author in frozenset(df.author)
+        author: get_author_domain(author) for author in frozenset(df.author)
     }
     df["domain"] = df.author.map(domains)
     df.to_csv(args.output, index=False)

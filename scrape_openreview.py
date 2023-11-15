@@ -45,11 +45,12 @@ def get_authors(venue, max_pages=None):
         soup = BeautifulSoup(response.text, "html.parser")
 
         for (i, paper) in enumerate(soup.find_all("div", {"class": "note-authors"})):
+            paper_id = paper.parent.h4.a["href"].split("=")[1]
             authors = paper.find_all("a")
             num_authors = len(authors)
             _LOG.debug("Paper %d has %d authors", i, num_authors)
             for (author_idx, author_id) in enumerate((a['title'] for a in authors), 1):
-                yield (author_id, author_idx, num_authors)
+                yield (paper_id, author_id, author_idx, num_authors)
 
         page += 1
         if max_pages is None:
@@ -73,12 +74,9 @@ def _main():
     _LOG.info("Venues:\n  * %s", "\n  * ".join(venues))
 
     df = pandas.DataFrame(
-        data=(
-            (venue, author, author_pos, num_authors)
-            for venue in venues
-            for (author, author_pos, num_authors) in get_authors(venue)
-        ),
-        columns=["venue", "author", "author_pos", "num_authors"]
+        data=((venue,) + authors_data for venue in venues
+              for authors_data in get_authors(venue)),
+        columns=["venue", "paper_id", "author", "author_pos", "num_authors"]
     )
 
     fname_output = args.output or f"{args.conference.split('.')[0]}_{args.year}.csv"
