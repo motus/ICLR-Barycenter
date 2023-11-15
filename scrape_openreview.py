@@ -46,7 +46,7 @@ def get_authors(venue, max_pages=None):
         for (i, paper) in enumerate(soup.find_all("div", {"class": "note-authors"})):
             authors = paper.find_all("a")
             num_authors = len(authors)
-            _LOG.info("Paper %d has %d authors", i, num_authors)
+            _LOG.debug("Paper %d has %d authors", i, num_authors)
             for (author_idx, author_id) in enumerate((a['title'] for a in authors), 1):
                 yield (author_id, author_idx, num_authors)
 
