@@ -28,7 +28,7 @@ def get_venues(conference, year):
         f"{_URL_ROOT}/venue?id={conference}", timeout=_HTTP_TIMEOUT)
     soup = BeautifulSoup(response.text, "html.parser")
     href_regex = re.compile(rf"/submissions\?venue={conference}/{year}/.*")
-    return [a['href'] for a in soup.find_all("a", href=href_regex)]
+    return [a['href'].split("=")[1] for a in soup.find_all("a", href=href_regex)]
 
 
 def get_authors(venue, max_pages=None):
@@ -40,7 +40,8 @@ def get_authors(venue, max_pages=None):
     while max_pages is None or page <= max_pages:
 
         _LOG.info("Get authors for venue: %s page: %d of %s", venue, page, max_pages)
-        response = requests.get(f"{_URL_ROOT}{venue}&page={page}", timeout=_HTTP_TIMEOUT)
+        response = requests.get(
+            f"{_URL_ROOT}/submissions?venue={venue}&page={page}", timeout=_HTTP_TIMEOUT)
         soup = BeautifulSoup(response.text, "html.parser")
 
         for (i, paper) in enumerate(soup.find_all("div", {"class": "note-authors"})):
@@ -73,11 +74,11 @@ def _main():
 
     df = pandas.DataFrame(
         data=(
-            (args.conference, args.year, venue, author, author_pos, num_authors)
+            (venue, author, author_pos, num_authors)
             for venue in venues
             for (author, author_pos, num_authors) in get_authors(venue)
         ),
-        columns=["conference", "year", "venue", "author", "author_pos", "num_authors"]
+        columns=["venue", "author", "author_pos", "num_authors"]
     )
 
     fname_output = args.output or f"{args.conference}_{args.year}.csv"
@@ -87,6 +88,6 @@ def _main():
 if __name__ == "__main__":
     logging.basicConfig(
         level=logging.INFO,
-        format='%(asctime)s %(filename)s:%(lineno)d %(funcName)s %(levelname)s %(message)s'
+        format='%(asctime)s %(funcName)s:%(lineno)d %(levelname)s %(message)s'
     )
     _main()
