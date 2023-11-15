@@ -25,12 +25,12 @@ def get_author_domain(author_id):
         return dom
 
     response = requests.get(f"{_URL_API}/profiles?id={author_id}", timeout=_HTTP_TIMEOUT)
-    profiles = response.json()["profiles"]
+    profiles = response.json().get("profiles", [])
     dom = max(
-        ((pos["end"] or float("inf"),
-          pos["start"] or float("inf"),
-          pos["institution"]["domain"])
-         for prof in profiles for pos in prof["content"]["history"]),
+        ((pos.get("end") or float("inf"),
+          pos.get("start") or float("inf"),
+          pos.get("institution", {}).get("domain"))
+         for prof in profiles for pos in prof.get("content", {}).get("history", [])),
         default=(None, None, None))[2]
 
     _LOG.info("Author: %s domain: %s", author_id, dom)
