@@ -7,7 +7,6 @@ import logging
 
 import pandas
 import requests
-import whois
 
 _LOG = logging.getLogger(__name__)
 
@@ -37,19 +36,6 @@ def get_author_domain(author_id):
     return dom
 
 
-def get_location(domain):
-    """
-    Get the country and state of the domain.
-    """
-    if domain is None:
-        return (None, None)
-    w = whois.whois(domain)
-    country = w.country or w.registrant_country
-    state = w.state or w.registrant_state
-    _LOG.info("Domain: %s Location: %s / %s", domain, country, state)
-    return (country, state)
-
-
 def _main():
 
     parser = argparse.ArgumentParser(
@@ -57,27 +43,12 @@ def _main():
     parser.add_argument("input")
     parser.add_argument("output")
     args = parser.parse_args()
-
     df = pandas.read_csv(args.input)
-
-    authors_set = frozenset(df.author)
-    _LOG.info("Number of authors: %d", len(authors_set))
     domains = {
         author: get_author_domain(author)
-        for author in authors_set
+        for author in frozenset(df.author)
     }
-
-    domains_set = frozenset(domains.values())
-    _LOG.info("Number of domains: %d", len(domains_set))
-    locations = {
-        domain: get_location(domain)
-        for domain in domains_set
-    }
-
     df["domain"] = df.author.map(domains)
-    df["country"] = df.domain.map(lambda d: locations[d][0])
-    df["state"] = df.domain.map(lambda d: locations[d][1])
-
     df.to_csv(args.output, index=False)
 
 
