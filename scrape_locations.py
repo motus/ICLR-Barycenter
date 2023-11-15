@@ -6,35 +6,9 @@ import argparse
 import logging
 
 import pandas
-import requests
 import whois
 
 _LOG = logging.getLogger(__name__)
-
-_URL_API = "https://api2.openreview.net"
-_HTTP_TIMEOUT = 5  # seconds
-
-
-def get_author_domain(author_id):
-    """
-    Get the domain of the most recent affiliation of the author.
-    """
-    if not author_id.startswith("~"):
-        dom = author_id.split("@")[1]
-        _LOG.info("Author: %s domain: %s", author_id, dom)
-        return dom
-
-    response = requests.get(f"{_URL_API}/profiles?id={author_id}", timeout=_HTTP_TIMEOUT)
-    profiles = response.json().get("profiles", [])
-    dom = max(
-        ((float(pos.get("end") or "inf"),
-          float(pos.get("start") or "inf"),
-          pos.get("institution", {}).get("domain"))
-         for prof in profiles for pos in prof.get("content", {}).get("history", [])),
-        default=(None, None, None))[2]
-
-    _LOG.info("Author: %s domain: %s", author_id, dom)
-    return dom
 
 
 def get_location(domain):
@@ -42,42 +16,28 @@ def get_location(domain):
     Get the country and state of the domain.
     """
     if domain is None:
-        return (None, None)
+        return (None, None, None)
     w = whois.whois(domain)
     country = w.country or w.registrant_country
     state = w.state or w.registrant_state
-    _LOG.info("Domain: %s Location: %s / %s", domain, country, state)
-    return (country, state)
+    city = w.city or w.registrant_city
+    _LOG.info("Domain: %s Location: %s, %s, %s", domain, country, state, city)
+    return (country, state, city)
 
 
 def _main():
-
     parser = argparse.ArgumentParser(
-        description="Scrape OpenReview for locations of the authors.")
+        description="Use whois to get the locations of the authors' domains.")
     parser.add_argument("input")
     parser.add_argument("output")
     args = parser.parse_args()
-
     df = pandas.read_csv(args.input)
-
-    authors_set = frozenset(df.author)
-    _LOG.info("Number of authors: %d", len(authors_set))
-    domains = {
-        author: get_author_domain(author)
-        for author in authors_set
-    }
-
-    domains_set = frozenset(domains.values())
-    _LOG.info("Number of domains: %d", len(domains_set))
-    locations = {
-        domain: get_location(domain)
-        for domain in domains_set
-    }
-
-    df["domain"] = df.author.map(domains)
+    domains = list(
+        df.groupby("domain").count().sort_values("author", ascending=False).index
+    )
+    locations = {domain: get_location(domain) for domain in domains}
     df["country"] = df.domain.map(lambda d: locations[d][0])
     df["state"] = df.domain.map(lambda d: locations[d][1])
-
     df.to_csv(args.output, index=False)
 
 
