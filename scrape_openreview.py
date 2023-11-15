@@ -53,10 +53,10 @@ def get_authors(venue, max_pages=float("inf")):
 
 def _main():
     parser = argparse.ArgumentParser(
-        description="Scrape OpenReview for locations of the authors.")
-    parser.add_argument("conference", default="ICLR.cc")
-    parser.add_argument("year", type=int, default=2023)
-    parser.add_argument("output", default=None, default=2023)
+        description="Scrape OpenReview for IDs the authors.")
+    parser.add_argument("--conference", default="ICLR.cc")
+    parser.add_argument("--year", type=int, default=2023)
+    parser.add_argument("--output", default=None)
     args = parser.parse_args()
     venues = get_venues(args.conference, args.year)
     _LOG.info("Venues:\n%s", "\n  * ".join(venues))
@@ -73,5 +73,5 @@ def _main():
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.INFO)
     _main()
