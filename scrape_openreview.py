@@ -16,7 +16,7 @@ _LOG = logging.getLogger(__name__)
 # Scrape HTML instead of using REST API so we don't have to login.
 _URL_ROOT = "https://openreview.net"
 
-_RE_LAST_PAGE = re.compile(r"/submissions\?page=\d+&.*")
+_RE_LAST_PAGE = re.compile(r"/submissions\?page=(\d+)&.*")
 _HTTP_TIMEOUT = 5  # seconds
 
 
@@ -52,8 +52,8 @@ def get_authors(venue, max_pages=None):
 
         page += 1
         if max_pages is None:
-            max_pages = int(soup.find_all("a", href=_RE_LAST_PAGE)[-1].text)
-
+            last_page = soup.find_all("a", href=_RE_LAST_PAGE)[-1]
+            max_pages = int(_RE_LAST_PAGE.match(last_page['href']).group(1))
 
 
 def _main():
@@ -66,7 +66,7 @@ def _main():
     args = parser.parse_args()
 
     venues = get_venues(args.conference, args.year)
-    _LOG.info("Venues:\n%s", "\n  * ".join(venues))
+    _LOG.info("Venues:\n  * %s", "\n  * ".join(venues))
 
     df = pandas.DataFrame(
         data=(
