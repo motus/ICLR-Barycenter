@@ -51,23 +51,33 @@ def get_location(domain):
 
 
 def _main():
+
     parser = argparse.ArgumentParser(
         description="Scrape OpenReview for locations of the authors.")
     parser.add_argument("input")
     parser.add_argument("output")
     args = parser.parse_args()
+
     df = pandas.read_csv(args.input)
+
+    authors_set = frozenset(df.author)
+    _LOG.info("Number of authors: %d", len(authors_set))
     domains = {
         author: get_author_domain(author)
-        for author in set(df.author)
+        for author in authors_set
     }
+
+    domains_set = frozenset(domains.values())
+    _LOG.info("Number of domains: %d", len(domains_set))
     locations = {
         domain: get_location(domain)
-        for domain in set(domains.values())
+        for domain in domains_set
     }
+
     df["domain"] = df.author.map(domains)
     df["country"] = df.domain.map(lambda d: locations[d][0])
     df["state"] = df.domain.map(lambda d: locations[d][1])
+
     df.to_csv(args.output, index=False)
 
 
