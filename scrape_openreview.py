@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Scrape OpenReview for emails of the authors.
+Scrape OpenReview for IDs the authors.
 Default conference is ICLR 2023.
 """
 import argparse
@@ -13,9 +13,8 @@ from bs4 import BeautifulSoup
 
 _LOG = logging.getLogger(__name__)
 
-# Scrape HTML for papers so we don't have to login.
+# Scrape HTML instead of using REST API so we don't have to login.
 _URL_ROOT = "https://openreview.net"
-_URL_API = "https://api2.openreview.net"
 
 _RE_LAST_PAGE = re.compile(r"/submissions\?page=\d+&.*")
 _HTTP_TIMEOUT = 5  # seconds
@@ -52,16 +51,6 @@ def get_authors(venue, max_pages=float("inf")):
         page += 1
 
 
-def get_author_domain(author_id):
-    """
-    Get the domain of the most recent affiliation of the author.
-    """
-    response = requests.get(f"{_URL_API}/profiles?id={author_id}", timeout=_HTTP_TIMEOUT)
-    profiles = response.json()["profiles"]
-    return max((pos["end"] or float("inf"), pos["start"], pos["institution"]["domain"])
-               for prof in profiles for pos in prof["content"]["history"])[2]
-
-
 def _main():
     parser = argparse.ArgumentParser(
         description="Scrape OpenReview for locations of the authors.")
@@ -81,3 +70,8 @@ def _main():
     )
     fname_output = args.output or f"{args.conference}_{args.year}.csv"
     df.to_csv(fname_output, index=False)
+
+
+if __name__ == "__main__":
+    logging.basicConfig(level=logging.DEBUG)
+    _main()
