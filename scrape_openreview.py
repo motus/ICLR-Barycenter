@@ -52,8 +52,11 @@ def get_authors(venue, max_pages=None):
 
         page += 1
         if max_pages is None:
-            last_page = soup.find_all("a", href=_RE_LAST_PAGE)[-1]
-            max_pages = int(_RE_LAST_PAGE.match(last_page['href']).group(1))
+            last_page = soup.find_all("a", href=_RE_LAST_PAGE)[-1:]
+            max_pages = (
+                int(_RE_LAST_PAGE.match(last_page[0]['href']).group(1))
+                if last_page else 0
+            )
 
 
 def _main():
