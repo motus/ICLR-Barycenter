@@ -81,7 +81,7 @@ def _main():
         columns=["venue", "author", "author_pos", "num_authors"]
     )
 
-    fname_output = args.output or f"{args.conference}_{args.year}.csv"
+    fname_output = args.output or f"{args.conference.split('.')[0]}_{args.year}.csv"
     df.to_csv(fname_output, index=False)
 
 
