@@ -2,9 +2,9 @@
 
 Let's have our next conference at the barycenter of ML research!
 
-We parse the proceedings of ICLR 2023 to obtain the location of each paper's authors.
-We then scrape the web for visa restrictions and airfare between these locations and use the resulting graph to minimize the total earth mover's distance of transporting thousands of ML scientists to the proposed optimal conference location.
+We build a graph of ML researchers' locations and distances between them.
+To obtain the vertices, we parse the proceedings of ICLR 2023 and extract the locations of each paper's authors.
+Then we scrape the web for visa requirements and airfare between these locations and use that data to label the arcs of the graph.
+Finally, we minimize the total earth mover's distance of transporting thousands of ML scientists and propose an optimal location of the next conference.
 
-We then extend our code to support other constraints, such as going to NeurIPS instead of ICLR, or transporting only the last author of each accepted paper.
-
-Solving an optimal transport problem for reviewer number 2 is left as an exercise to the reader.
+Solving an optimal transport problem of sending all reviewers number 2 to a single destination is left as an exercise to the reader.
