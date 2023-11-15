@@ -6,8 +6,8 @@ import argparse
 import logging
 
 import pandas
-import whois
 import requests
+import whois
 
 _LOG = logging.getLogger(__name__)
 
@@ -19,10 +19,18 @@ def get_author_domain(author_id):
     """
     Get the domain of the most recent affiliation of the author.
     """
+    if not author_id.startswith("~"):
+        dom = author_id.split("@")[1]
+        _LOG.info("Author: %s domain: %s", author_id, dom)
+        return dom
+
     response = requests.get(f"{_URL_API}/profiles?id={author_id}", timeout=_HTTP_TIMEOUT)
     profiles = response.json()["profiles"]
-    dom = max((pos["end"] or float("inf"), pos["start"], pos["institution"]["domain"])
+    dom = max((pos["end"] or float("inf"),
+               pos["start"] or float("inf"),
+               pos["institution"]["domain"])
               for prof in profiles for pos in prof["content"]["history"])[2]
+
     _LOG.info("Author: %s domain: %s", author_id, dom)
     return dom
 
@@ -47,13 +55,13 @@ def _main():
     df = pandas.read_csv(args.input)
     domains = {
         author: get_author_domain(author)
-        for author in set(df.author_id)
+        for author in set(df.author)
     }
     locations = {
         domain: get_location(domain)
         for domain in set(domains.values())
     }
-    df["domain"] = df.author_id.map(domains)
+    df["domain"] = df.author.map(domains)
     df["country"] = df.domain.map(lambda d: locations[d][0])
     df["state"] = df.domain.map(lambda d: locations[d][1])
     df.to_csv(args.output, index=False)
