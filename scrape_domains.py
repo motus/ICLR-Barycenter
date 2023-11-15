@@ -14,13 +14,13 @@ _URL_API = "https://api2.openreview.net"
 _HTTP_TIMEOUT = 5  # seconds
 
 
-def get_author_domain(author_id):
+def get_author_domain(author_id, i=0):
     """
     Get the domain of the most recent affiliation of the author.
     """
     if not author_id.startswith("~"):
-        dom = author_id.split("@")[1]
-        _LOG.info("Author: %s domain: %s", author_id, dom)
+        dom = author_id.split("@")[-1]
+        _LOG.info("Author: %5d :: %s domain: %s", i, author_id, dom)
         return dom
 
     response = requests.get(f"{_URL_API}/profiles?id={author_id}", timeout=_HTTP_TIMEOUT)
@@ -32,7 +32,7 @@ def get_author_domain(author_id):
          for prof in profiles for pos in prof.get("content", {}).get("history", [])),
         default=(float("inf"), float("-inf"), ""))[2]
 
-    _LOG.info("Author: %s domain: %s", author_id, dom)
+    _LOG.info("Author: %5d :: %s domain: %s", i, author_id, dom)
     return dom
 
 
@@ -44,8 +44,11 @@ def _main():
     parser.add_argument("output")
     args = parser.parse_args()
     df = pandas.read_csv(args.input)
+    authors_set = frozenset(df.author)
+    _LOG.info("Num papers: %d from unique authors: %d", len(df), len(authors_set))
     domains = {
-        author: get_author_domain(author) for author in frozenset(df.author)
+        author: get_author_domain(author, i)
+        for (i, author) in enumerate(authors_set)
     }
     df["domain"] = df.author.map(domains)
     df.to_csv(args.output, index=False)
