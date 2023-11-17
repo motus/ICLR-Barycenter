@@ -32,8 +32,23 @@ def get_author_domain(author_id, i=0):
          for prof in profiles for pos in prof.get("content", {}).get("history", [])),
         default=(float("inf"), float("-inf"), ""))[2]
 
+    dom = dom.split("@")[-1]
     _LOG.info("Author: %5d :: %s domain: %s", i, author_id, dom)
     return dom
+
+
+def domains_cleanup_map(domains):
+    """
+    Replace subdomains with the corresponding parent domains.
+    TODO: come up with a more optimal way of doing it.
+    """
+    for i in range(len(domains) - 1):
+        for j in range(i + 1, len(domains)):
+            if domains[i].endswith(domains[j]):
+                tail = domains[j].split(".")
+                if domains[i].split(".")[-len(tail):] == tail:
+                    _LOG.info("Replace domains: %s -> %s", domains[i], domains[j])
+                    yield (domains[i], domains[j])
 
 
 def _main():
@@ -49,6 +64,11 @@ def _main():
     domains = {
         author: get_author_domain(author, i)
         for (i, author) in enumerate(authors_set)
+    }
+    cleanup_map = dict(domains_cleanup_map(list(domains.values())))
+    domains = {
+        author: cleanup_map.get(domains[author], domains[author])
+        for author in domains
     }
     df["domain"] = df.author.map(domains)
     df.to_csv(args.output, index=False)
