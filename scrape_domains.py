@@ -42,6 +42,7 @@ def domains_cleanup_map(domains):
     Replace subdomains with the corresponding parent domains.
     TODO: come up with a more optimal way of doing it.
     """
+    domains = sorted(set(domains))
     for i in range(len(domains) - 1):
         for j in range(i + 1, len(domains)):
             if domains[i].endswith(domains[j]):
@@ -65,7 +66,7 @@ def _main():
         author: get_author_domain(author, i)
         for (i, author) in enumerate(authors_set)
     }
-    cleanup_map = dict(domains_cleanup_map(list(domains.values())))
+    cleanup_map = dict(domains_cleanup_map(domains.values()))
     domains = {
         author: cleanup_map.get(domains[author], domains[author])
         for author in domains
