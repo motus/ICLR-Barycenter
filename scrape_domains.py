@@ -19,7 +19,7 @@ def get_author_domain(author_id, i=0):
     Get the domain of the most recent affiliation of the author.
     """
     if not author_id.startswith("~"):
-        dom = author_id.split("@")[-1]
+        dom = author_id.split("@")[-1].strip().lower()
         _LOG.info("Author: %5d :: %s domain: %s", i, author_id, dom)
         return dom
 
@@ -32,7 +32,7 @@ def get_author_domain(author_id, i=0):
          for prof in profiles for pos in prof.get("content", {}).get("history", [])),
         default=(float("inf"), float("-inf"), ""))[2]
 
-    dom = dom.split("@")[-1]
+    dom = dom.split("@")[-1].strip().lower()
     _LOG.info("Author: %5d :: %s domain: %s", i, author_id, dom)
     return dom
 
