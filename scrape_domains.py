@@ -47,7 +47,7 @@ def domains_cleanup_map(domains):
         for j in range(i + 1, len(domains)):
             if domains[i].endswith(domains[j]):
                 tail = domains[j].split(".")
-                if domains[i].split(".")[-len(tail):] == tail:
+                if domains[i].split(".")[-len(tail):] == tail and tail[0] not in {"edu", "org", "ac"}:
                     _LOG.info("Replace domains: %s -> %s", domains[i], domains[j])
                     yield (domains[i], domains[j])
 
