@@ -24,12 +24,12 @@ def get_accepted_papers(year):
     response = requests.get(f"{_URL_ROOT}/virtual/{year}/papers.html", timeout=_HTTP_TIMEOUT)
     soup = BeautifulSoup(response.text, "html.parser")
     for a in soup.find("noscript", {"class": "noscript"}).ul.find_all("a"):
-        ref = a["href"]
-        response = requests.get(f"{_URL_ROOT}{ref}", timeout=_HTTP_TIMEOUT)
+        _LOG.info("Get OpenReview ID for: %s", a['href'])
+        response = requests.get(f"{_URL_ROOT}{a['href']}", timeout=_HTTP_TIMEOUT)
         soup = BeautifulSoup(response.text, "html.parser")
-        paper_id = soup.find("a", title="OpenReview")["href"].split("=")[-1]
-        _LOG.info("OpenReview ID: %s Paper: %s", paper_id, ref)
-        ids.append(paper_id)
+        ref = soup.find("a", title="OpenReview")
+        if ref:
+            ids.append(ref["href"].split("=")[-1])
     return ids
 
 
@@ -38,17 +38,20 @@ def _main():
     parser = argparse.ArgumentParser(
         description="Scrape ICLR site for OpenReview IDs of accepted papers.")
     parser.add_argument("--year", type=int, default=2023)
-    parser.add_argument("data", help="CSV file with submitted papers")
+    parser.add_argument("input", help="CSV file with submitted papers")
+    parser.add_argument(
+        "output", default=None,
+        help="Output CSV file with the `accepted` column. Same as `input` if not specified.")
     args = parser.parse_args()
 
-    df = pandas.read_csv(args.data)
+    df = pandas.read_csv(args.input)
     if "accepted" not in df.columns:
         df["accepted"] = False
 
     ids = set(get_accepted_papers(args.year))
     df["accepted"] |= df["paper_id"].isin(ids)
 
-    df.to_csv(args.data, index=False)
+    df.to_csv(args.output or args.input, index=False)
 
 
 if __name__ == "__main__":
