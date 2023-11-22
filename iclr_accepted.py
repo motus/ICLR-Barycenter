@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Scrape OpenReview for IDs the authors.
-Default conference is ICLR 2023.
+Scrape OpenReview for IDs of the accepted papers.
+Update the CSV file with the `accepted` column.
 """
 import argparse
 import logging
