@@ -43,8 +43,8 @@ def get_location(client, domain):
         response = chat_completion.choices[0].message.content
         _LOG.info("Response for : %s :: %s", domain, response)
         return response
-    except APITimeoutError as ex:
-        _LOG.error("Timeout for %s", domain, exc_info=ex)
+    except APITimeoutError:
+        _LOG.warning("Timeout for %s", domain)
         return None
 
 
