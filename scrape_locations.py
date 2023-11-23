@@ -8,12 +8,11 @@ import json
 import logging
 
 import pandas
-from openai import OpenAI
+from openai import OpenAI, APITimeoutError
 
 _LOG = logging.getLogger(__name__)
 
 
-_OAI_MODEL = "gpt-3.5-turbo"
 _OAI_REQUEST = """
     Good.
     What international airport is the nearest to the {domain} largest campus?
@@ -25,23 +24,28 @@ def get_location(client, domain):
     """
     Get the location of the domain.
     """
-    _LOG.debug("Domain: %s", domain)
+    _LOG.info("Domain: %s", domain)
     if domain is None:
         return None
-    chat_completion = client.chat.completions.create(
-        messages=[{
-            "role": "user",
-            "content": _OAI_REQUEST.format(domain=domain)
-        }],
-        n=1,
-        # max_tokens=1,
-        temperature=1.5,
-        frequency_penalty=-2.0,
-        model=_OAI_MODEL
-    )
-    response = chat_completion.choices[0].message.content
-    _LOG.info("Response for : %s :: %s", domain, response)
-    return response
+    try:
+        chat_completion = client.chat.completions.create(
+            messages=[{
+                "role": "user",
+                "content": _OAI_REQUEST.format(domain=domain)
+            }],
+            n=1,
+            # max_tokens=1,
+            temperature=1.5,
+            frequency_penalty=-2.0,
+            model="gpt-3.5-turbo",
+            timeout=5,
+        )
+        response = chat_completion.choices[0].message.content
+        _LOG.info("Response for : %s :: %s", domain, response)
+        return response
+    except APITimeoutError as ex:
+        _LOG.error("Timeout for %s", domain, exc_info=ex)
+        return None
 
 
 def _main():
@@ -68,7 +72,7 @@ def _main():
 
 if __name__ == "__main__":
     logging.basicConfig(
-        level=logging.DEBUG,
+        level=logging.INFO,
         format='%(asctime)s %(funcName)s:%(lineno)d %(levelname)s %(message)s'
     )
     _main()
