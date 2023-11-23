@@ -33,6 +33,10 @@ def get_location(client, domain):
             "role": "user",
             "content": _OAI_REQUEST.format(domain=domain)
         }],
+        n=1,
+        # max_tokens=1,
+        temperature=1.5,
+        frequency_penalty=-2.0,
         model=_OAI_MODEL
     )
     response = chat_completion.choices[0].message.content
@@ -53,7 +57,7 @@ def _main():
 
     df = pandas.read_csv(args.input)
     domains = sorted(dom for dom in set(df.domain[df.accepted])
-                     if dom and isinstance(dom, str))
+                     if dom and isinstance(dom, str) and ' ' not in dom)
 
     client = OpenAI(api_key=config["key"])
     responses = [(dom, get_location(client, dom)) for dom in domains]
@@ -64,7 +68,7 @@ def _main():
 
 if __name__ == "__main__":
     logging.basicConfig(
-        level=logging.INFO,
+        level=logging.DEBUG,
         format='%(asctime)s %(funcName)s:%(lineno)d %(levelname)s %(message)s'
     )
     _main()
