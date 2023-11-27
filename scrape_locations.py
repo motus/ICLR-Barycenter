@@ -60,11 +60,16 @@ def _main():
         config = json.load(f)
 
     df = pandas.read_csv(args.input)
-    domains = sorted(dom for dom in set(df.domain[df.accepted])
-                     if dom and isinstance(dom, str) and ' ' not in dom)
+    if "response" in df.columns:
+        responses = list(df[df.response.notna()].to_records(index=False))
+        domains = [dom for dom in df.domain[df.response.isna()]]
+    else:
+        responses = []
+        domains = sorted(dom for dom in set(df.domain[df.accepted])
+                         if dom and isinstance(dom, str) and ' ' not in dom)
 
     client = OpenAI(api_key=config["key"])
-    responses = [(dom, get_location(client, dom)) for dom in domains]
+    responses += [(dom, get_location(client, dom)) for dom in domains]
 
     df_out = pandas.DataFrame(data=responses, columns=["domain", "response"])
     df_out.to_csv(args.output, index=False, quoting=csv.QUOTE_ALL)
