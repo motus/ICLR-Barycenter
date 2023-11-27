@@ -71,8 +71,8 @@ def _main():
     client = OpenAI(api_key=config["key"])
     responses += [(dom, get_location(client, dom)) for dom in domains]
 
-    df_out = pandas.DataFrame(data=responses, columns=["domain", "response"])
-    df_out.to_csv(args.output, index=False, quoting=csv.QUOTE_ALL)
+    df_out = pandas.DataFrame(data=map(list, responses), columns=["domain", "response"])
+    df_out.sort_values("domain").to_csv(args.output, index=False, quoting=csv.QUOTE_ALL)
 
 
 if __name__ == "__main__":
